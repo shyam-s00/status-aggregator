@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"context"
 	"fmt"
 	"status-aggregator/internal/models"
 	"time"
@@ -12,7 +13,7 @@ func NewDummyProvider() *DummyProvider {
 	return &DummyProvider{}
 }
 
-func (d *DummyProvider) Fetch(sys models.SystemConfig) ([]models.Incident, error) {
+func (d *DummyProvider) Fetch(ctx context.Context, sys models.SystemConfig) ([]models.Incident, error) {
 	//TODO implement me
 	time.Sleep(2 * time.Second)
 	return []models.Incident{

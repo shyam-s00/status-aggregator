@@ -1,7 +1,10 @@
 package providers
 
-import "status-aggregator/internal/models"
+import (
+	"context"
+	"status-aggregator/internal/models"
+)
 
 type StatusProvider interface {
-	Fetch(sys models.SystemConfig) ([]models.Incident, error)
+	Fetch(ctx context.Context, sys models.SystemConfig) ([]models.Incident, error)
 }
