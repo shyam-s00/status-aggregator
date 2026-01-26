@@ -27,7 +27,7 @@ func (p *RSSProvider) Fetch(ctx context.Context, sys models.SystemConfig) ([]mod
 		return nil, fmt.Errorf("error fetching RSS feed %s: %w", sys.Name, err)
 	}
 
-	// for now let's make a naive check to identify if there is an active incident
+	// TODO: for now let's make a naive check to identify if there is an active incident
 	hasActiveIncident := false
 	if len(feed.Items) > 0 {
 		latestTitle := strings.ToLower(feed.Items[0].Title)

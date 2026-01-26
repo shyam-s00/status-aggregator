@@ -5,6 +5,6 @@ import (
 	"status-aggregator/internal/models"
 )
 
-type StatusProvider interface {
+type Provider interface {
 	Fetch(ctx context.Context, sys models.SystemConfig) ([]models.Incident, error)
 }

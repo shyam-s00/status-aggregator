@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"status-aggregator/internal/engine"
 	"status-aggregator/internal/models"
+	"time"
 )
 
 func main() {
@@ -17,9 +18,11 @@ func main() {
 	fmt.Printf("🚀 Starting Status Aggregator with %d systems...\n\n", len(systems))
 
 	// Create a context that can be canceled (useful for grateful shutdown later)
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
 
-	results := engine.Scrape(ctx, systems)
+	eng := engine.NewEngine(systems)
+	results := eng.Run(ctx)
 
 	// Main loop
 	for result := range results {
@@ -33,7 +36,11 @@ func main() {
 		}
 
 		if result.HasActiveIncident {
-			fmt.Println("   ⚠️  Status: ACTIVE INCIDENT DETECTED")
+			details := ""
+			if len(result.Incidents) > 0 {
+				details = fmt.Sprintf(" (most recent incident: %s)", result.Incidents[0].Title)
+			}
+			fmt.Println("   ⚠️  Status: ACTIVE INCIDENT DETECTED\n", details)
 		} else {
 			fmt.Println("   ✅  Status: Operational / No active incidents")
 		}
@@ -51,6 +58,6 @@ func main() {
 		fmt.Println("-----------------------------------------------------")
 	}
 
-	fmt.Println("🏁🏁 All Aggregation finished. 🏁🏁")
+	fmt.Println("\n🏁🏁 All Aggregation finished. 🏁🏁")
 
 }
