@@ -13,6 +13,7 @@ func main() {
 		{Id: "ct01", Name: "CommerceTools", Url: "https://status.commercetools.com/pages/56e4295370fe4ece420002bb/rss", Type: "rss"},
 		{Id: "og01", Name: "OrderGroove", Url: "https://status.ordergroove.com/history.rss", Type: "rss"},
 		{Id: "gcp01", Name: "GCP", Url: "https://status.cloud.google.com/en/feed.atom", Type: "rss"},
+		{Id: "gh01", Name: "GitHub", Url: "https://www.githubstatus.com/", Type: "html"},
 	}
 
 	fmt.Printf("🚀 Starting Status Aggregator with %d systems...\n\n", len(systems))

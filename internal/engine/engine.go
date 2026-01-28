@@ -39,6 +39,8 @@ func (e *Engine) Run(ctx context.Context) <-chan Result {
 			switch sys.Type {
 			case "rss":
 				provider = providers.NewRSSProvider()
+			case "html":
+				provider = providers.NewHtmlProvider()
 			default:
 				results <- Result{
 					SystemId:          sys.Id,
