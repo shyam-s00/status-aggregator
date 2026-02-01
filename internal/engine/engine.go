@@ -2,31 +2,29 @@ package engine
 
 import (
 	"context"
-	"fmt"
 	"status-aggregator/internal/models"
 	"status-aggregator/internal/providers"
+	"sync"
 
 	"golang.org/x/sync/errgroup"
 )
 
 type Engine struct {
-	systems []models.SystemConfig
+	systems      []models.SystemConfig
+	htmlProvider *providers.HtmlProvider
+	rssProvider  *providers.RSSProvider
 }
 
 func NewEngine(systems []models.SystemConfig) *Engine {
-	return &Engine{systems: systems}
+	return &Engine{
+		systems:      systems,
+		htmlProvider: providers.NewHtmlProvider(),
+		rssProvider:  providers.NewRSSProvider(),
+	}
 }
 
-type Result struct {
-	SystemId          string
-	SystemName        string
-	Incidents         []models.Incident
-	HasActiveIncident bool
-	Error             error
-}
-
-func (e *Engine) Run(ctx context.Context) <-chan Result {
-	results := make(chan Result, len(e.systems))
+func (e *Engine) Run(ctx context.Context) <-chan models.Result {
+	results := make(chan models.Result, len(e.systems))
 
 	g, ctx := errgroup.WithContext(ctx)
 
@@ -34,42 +32,49 @@ func (e *Engine) Run(ctx context.Context) <-chan Result {
 	for _, sys := range e.systems {
 		sys := sys
 		g.Go(func() error {
-			var provider providers.Provider
+			var wg sync.WaitGroup
+
+			result := models.Result{
+				SystemId:   sys.Id,
+				SystemName: sys.Name,
+			}
+
 			// TODO: Explore to see if there is a better way to do this...
-			switch sys.Type {
-			case "rss":
-				provider = providers.NewRSSProvider()
-			case "html":
-				provider = providers.NewHtmlProvider()
-			default:
-				results <- Result{
-					SystemId:          sys.Id,
-					SystemName:        sys.Name,
-					Incidents:         nil,
-					HasActiveIncident: false,
-					Error:             fmt.Errorf("unknown provider type %s", sys.Type),
+			// 1. Fetch current status
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				status, isOngoing, err := e.htmlProvider.FetchStatus(ctx, sys.StatusUrl, sys.HtmlConfig)
+				if err != nil {
+					result.Error = err
+				} else {
+					result.CurrentStatus = status
+					result.HasActiveIncident = isOngoing
 				}
-				return nil
-			}
+			}()
 
-			incidents, err := provider.Fetch(ctx, sys)
+			// 2. Fetch history (RSS or HTML)
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				var incidents []models.Incident
+				var err error
 
-			hasActiveIncident := false
-			if err == nil {
-				for _, inc := range incidents {
-					if inc.IsOngoing {
-						hasActiveIncident = true
-						break
-					}
+				if sys.Type == "rss" && sys.FeedUrl != "" {
+					incidents, err = e.rssProvider.FetchHistory(ctx, sys)
+				} else if sys.Type == "html" {
+					incidents, err = e.htmlProvider.FetchHistory(ctx, sys)
 				}
-			}
-			results <- Result{
-				SystemId:          sys.Id,
-				SystemName:        sys.Name,
-				Incidents:         incidents,
-				HasActiveIncident: hasActiveIncident,
-				Error:             err,
-			}
+
+				if err == nil {
+					result.Incidents = incidents
+				} else {
+					result.Error = err
+				}
+			}()
+
+			wg.Wait()
+			results <- result
 			return nil
 		})
 	}

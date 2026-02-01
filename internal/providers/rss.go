@@ -16,13 +16,17 @@ func NewRSSProvider() *RSSProvider {
 	return &RSSProvider{}
 }
 
-func (p *RSSProvider) Fetch(ctx context.Context, sys models.SystemConfig) ([]models.Incident, error) {
+func (p *RSSProvider) FetchStatus(_ context.Context, _ string, _ map[string]string) (string, bool, error) {
+	return "Operational", false, nil
+}
+
+func (p *RSSProvider) FetchHistory(ctx context.Context, sys models.SystemConfig) ([]models.Incident, error) {
 	fp := gofeed.NewParser()
 
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	feed, err := fp.ParseURLWithContext(sys.Url, ctx)
+	feed, err := fp.ParseURLWithContext(sys.FeedUrl, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching RSS feed %s: %w", sys.Name, err)
 	}

@@ -1,0 +1,25 @@
+[
+  {
+    "id": "os01",
+    "name": "OpenShift",
+    "status_url": "https://status.redhat.com/",
+    "type": "rss",
+    "feed_url": "https://status.redhat.com/history.rss",
+    "html_config": {
+      "class": "page-status",
+      "tag": "div"
+    }
+  },
+  {
+    "id": "lr01",
+    "name": "LoginRadius",
+    "status_url": "https://status.loginradius.com/",
+    "type": "rss",
+    "feed_url": "https://status.loginradius.com/history.rss",
+    "auth_token": "",
+    "html_config": {
+      "class": "status",
+      "tag": "h2"
+    }
+  }
+]

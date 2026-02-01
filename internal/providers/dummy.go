@@ -13,7 +13,7 @@ func NewDummyProvider() *DummyProvider {
 	return &DummyProvider{}
 }
 
-func (d *DummyProvider) Fetch(ctx context.Context, sys models.SystemConfig) ([]models.Incident, error) {
+func (d *DummyProvider) FetchHistory(_ context.Context, sys models.SystemConfig) ([]models.Incident, error) {
 	//TODO implement me
 	time.Sleep(2 * time.Second)
 	return []models.Incident{
@@ -25,7 +25,7 @@ func (d *DummyProvider) Fetch(ctx context.Context, sys models.SystemConfig) ([]m
 			Status:     "investigating",
 			IsOngoing:  true,
 			UpdatedAt:  time.Now(),
-			Url:        sys.Url,
+			Url:        sys.StatusUrl,
 		},
 	}, nil
 }
