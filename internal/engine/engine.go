@@ -4,7 +4,6 @@ import (
 	"context"
 	"status-aggregator/internal/models"
 	"status-aggregator/internal/providers"
-	"sync"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -32,46 +31,17 @@ func (e *Engine) Run(ctx context.Context) <-chan models.Result {
 	for _, sys := range e.systems {
 		sys := sys
 		g.Go(func() error {
-			var wg sync.WaitGroup
-
-			result := models.Result{
-				SystemId:   sys.Id,
-				SystemName: sys.Name,
+			result, err := e.fetch(ctx, sys)
+			if err != nil {
+				result.Error = err
 			}
 
-			// TODO: Explore to see if there is a better way to do this...
-			// 1. Fetch current status
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				status, isOngoing, err := e.htmlProvider.FetchStatus(ctx, sys.StatusUrl, sys.HtmlConfig)
-				if err != nil {
-					result.Error = err
-				} else {
-					result.CurrentStatus = status
-					result.HasActiveIncident = isOngoing
-				}
-			}()
+			select {
+			case results <- result:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 
-			// 2. Fetch history
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				var incidents []models.Incident
-				var err error
-
-				if sys.Type == "rss" && sys.FeedUrl != "" {
-					incidents, err = e.rssProvider.FetchHistory(ctx, sys)
-				}
-				if err == nil {
-					result.Incidents = incidents
-				} else {
-					result.Error = err
-				}
-			}()
-
-			wg.Wait()
-			results <- result
 			return nil
 		})
 	}
@@ -83,4 +53,40 @@ func (e *Engine) Run(ctx context.Context) <-chan models.Result {
 	}()
 
 	return results
+}
+
+func (e *Engine) fetch(ctx context.Context, sys models.SystemConfig) (models.Result, error) {
+	result := models.Result{
+		SystemId:   sys.Id,
+		SystemName: sys.Name,
+	}
+
+	g, ctx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		status, isOngoing, err := e.htmlProvider.FetchStatus(ctx, sys.StatusUrl, sys.HtmlConfig)
+		if err != nil {
+			return err
+		}
+		result.CurrentStatus = status
+		result.HasActiveIncident = isOngoing
+		return nil
+	})
+
+	g.Go(func() error {
+		if sys.Type == "rss" && sys.FeedUrl != "" {
+			incidents, err := e.rssProvider.FetchHistory(ctx, sys)
+			if err != nil {
+				return err
+			}
+			result.Incidents = incidents
+		}
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return result, err
+	}
+
+	return result, nil
 }
