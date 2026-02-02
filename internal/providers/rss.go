@@ -16,10 +16,6 @@ func NewRSSProvider() *RSSProvider {
 	return &RSSProvider{}
 }
 
-func (p *RSSProvider) FetchStatus(_ context.Context, _ string, _ map[string]string) (string, bool, error) {
-	return "Operational", false, nil
-}
-
 func (p *RSSProvider) FetchHistory(ctx context.Context, sys models.SystemConfig) ([]models.Incident, error) {
 	fp := gofeed.NewParser()
 

@@ -53,7 +53,7 @@ func (e *Engine) Run(ctx context.Context) <-chan models.Result {
 				}
 			}()
 
-			// 2. Fetch history (RSS or HTML)
+			// 2. Fetch history
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -62,10 +62,7 @@ func (e *Engine) Run(ctx context.Context) <-chan models.Result {
 
 				if sys.Type == "rss" && sys.FeedUrl != "" {
 					incidents, err = e.rssProvider.FetchHistory(ctx, sys)
-				} else if sys.Type == "html" {
-					incidents, err = e.htmlProvider.FetchHistory(ctx, sys)
 				}
-
 				if err == nil {
 					result.Incidents = incidents
 				} else {

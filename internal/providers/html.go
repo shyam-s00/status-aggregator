@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"status-aggregator/internal/models"
 	"strings"
 	"time"
 
@@ -21,10 +20,6 @@ func NewHtmlProvider() *HtmlProvider {
 	return &HtmlProvider{client: &http.Client{
 		Timeout: 15 * time.Second,
 	}}
-}
-
-func (p *HtmlProvider) FetchHistory(_ context.Context, _ models.SystemConfig) ([]models.Incident, error) {
-	return []models.Incident{}, nil
 }
 
 func (p *HtmlProvider) FetchStatus(ctx context.Context, url string, config map[string]string) (string, bool, error) {
