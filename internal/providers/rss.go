@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"status-aggregator/internal/models"
-	"strings"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -27,24 +26,11 @@ func (p *RSSProvider) FetchHistory(ctx context.Context, sys models.SystemConfig)
 		return nil, fmt.Errorf("error fetching RSS feed %s: %w", sys.Name, err)
 	}
 
-	// TODO: for now let's make a naive check to identify if there is an active incident
-	hasActiveIncident := false
-	if len(feed.Items) > 0 {
-		latestTitle := strings.ToLower(feed.Items[0].Title)
-		if strings.Contains(latestTitle, "investigating") ||
-			strings.Contains(latestTitle, "monitoring") ||
-			strings.Contains(latestTitle, "identified") ||
-			strings.Contains(latestTitle, "acknowledged") ||
-			strings.Contains(latestTitle, "degraded") ||
-			strings.Contains(latestTitle, "outage") ||
-			strings.Contains(latestTitle, "incident") ||
-			!strings.Contains(latestTitle, "resolved") ||
-			!strings.Contains(latestTitle, "completed") {
-			hasActiveIncident = true
-		}
+	limit := sys.HistoryLimit
+	if limit == 0 {
+		limit = 5 // default to 5 if not specified
 	}
 
-	limit := 5 //TODO: make configurable per system through config file
 	if len(feed.Items) < limit {
 		limit = len(feed.Items)
 	}
@@ -67,7 +53,7 @@ func (p *RSSProvider) FetchHistory(ctx context.Context, sys models.SystemConfig)
 			Status:     "Unknown",
 			Url:        item.Link,
 			UpdatedAt:  t,
-			IsOngoing:  hasActiveIncident && i == 0,
+			IsOngoing:  false, // we rely on HTML scrapers to get this.
 		}
 		incidents = append(incidents, inc)
 	}

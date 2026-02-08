@@ -5,6 +5,7 @@
     "status_url": "https://status.redhat.com/",
     "type": "rss",
     "feed_url": "https://status.redhat.com/history.rss",
+    "history_limit": 8,
     "html_config": {
       "class": "page-status",
       "tag": "div"
