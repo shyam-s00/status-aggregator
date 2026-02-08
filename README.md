@@ -1,52 +1,47 @@
 # Status Aggregator
-This is WIP project, more changes are incoming.
 
-A service for aggregating status checks and health metrics from multiple sources into a unified dashboard or response.
+![CI Status](https://github.com/shyam-s00/status-aggregator/actions/workflows/ci.yml/badge.svg)
+
+A service for aggregating status checks and health metrics from multiple sources into a unified dashboard.
 
 ## Description
 
-This project collects status information from configured services and provides an aggregated view of system health. It is designed to help operations teams and developers quickly assess the overall state of their infrastructure.
+This project collects status information from configured services and provides an aggregated view of system health. It utilizes a hybrid approach to ensure data accuracy:
+
+*   **Current Status**: Scrapes the official HTML status pages of providers to determine if a system is currently operational or has an active incident.
+*   **Incident History**: Consumes RSS feeds to build a historical timeline of past incidents.
 
 ## Prerequisites
 
-- Go (1.21 or higher)
+*   Go (1.23 or higher)
 
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd status-aggregator
-   ```
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/shyam-s00/status-aggregator.git
+    cd status-aggregator
+    ```
 
-2. Download dependencies:
-   ```bash
-   go mod download
-   ```
+2.  Download dependencies:
+    ```bash
+    go mod download
+    ```
 
 ## Configuration
 
-Set up your environment variables by creating a `.env` file based on `.env.example` (if provided) or configuring the `config/` directory.
+The application is driven by configuration files (e.g., `config.json`) where you can define:
+*   System providers (RSS feed URLs, HTML status page URLs).
+*   HTML selectors for scraping status text.
+*   History limits for incident logs.
+
+*Note: Ensure your configuration file is present in the working directory or the specific config path.*
 
 ## Usage
 
-To run the application directly:
+### Running Locally
+
+To run the application directly from source:
 
 ```bash
-go run main.go
-```
-
-To build and run the binary:
-
-```bash
-go build -o status-aggregator
-./status-aggregator
-```
-
-## Testing
-
-Run the test suite with:
-
-```bash
-go test ./...
-```
+go run ./cmd/server
