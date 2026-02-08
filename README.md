@@ -1,6 +1,6 @@
 # Status Aggregator
 
-![CI Status](https://github.com/shyam-s00/status-aggregator/actions/workflows/ci.yml/badge.svg)
+[![Build Status](https://github.com/shyam-s00/status-aggregator/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/shyam-s00/status-aggregator/actions/workflows/go.yml)
 
 A service for aggregating status checks and health metrics from multiple sources into a unified dashboard.
 
