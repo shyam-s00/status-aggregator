@@ -44,4 +44,4 @@ The application is driven by configuration files (e.g., `config.json`) where you
 To run the application directly from source:
 
 ```bash
-go run ./cmd/server
+go run ./cmd/aggregator
