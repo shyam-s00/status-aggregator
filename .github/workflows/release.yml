@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.25'
+
+      - name: Build Windows
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: go build -o status-aggregator-win-amd64.exe ./cmd/aggregator
+
+      - name: Build Linux AMD64
+        env:
+          GOOS: linux
+          GOARCH: amd64
+        run: go build -o status-aggregator-linux-amd64 ./cmd/aggregator
+
+      - name: Archive Windows
+        run: |
+          mkdir win-dist
+          cp status-aggregator-win-amd64.exe win-dist/status-aggregator.exe
+          cp config.json win-dist/
+          cd win-dist
+          zip -r ../status-aggregator-win-amd64.zip .
+
+      - name: Archive Linux
+        run: |
+          mkdir linux-dist
+          cp status-aggregator-linux-amd64 linux-dist/status-aggregator
+          cp config.json linux-dist/
+          cd linux-dist
+          tar -czvf ../status-aggregator-linux-amd64.tar.gz .
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            status-aggregator-win-amd64.zip
+            status-aggregator-linux-amd64.tar.gz
